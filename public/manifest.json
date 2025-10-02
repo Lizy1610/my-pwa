@@ -1,0 +1,23 @@
+{
+  "name": "Glow Up",
+  "short_name": "GlowUp",
+  "description": "Aplicación web progresiva para tips de belleza y maquillaje.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#db2777",
+  "icons": [
+    {
+      "src": "/logo-glowup.png",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/logo-glowup.png",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
