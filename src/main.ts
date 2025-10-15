@@ -1,6 +1,6 @@
-import './style.css'
+import './style.css';
+import { addEntry, getAllEntries } from './db';
 
-/** ====== Iconos SVG (inline) ====== **/
 const IconBrush = `
 <svg class="icon-big" viewBox="0 0 24 24" fill="none">
   <path d="M14.5 3l6.5 6.5-7.8 7.8c-1.2 1.2-3.1 1.2-4.3 0-.5-.5-.8-1.1-.9-1.8-.1-.7-.4-1.3-.9-1.8-.5-.5-1.1-.8-1.8-.9-.7-.1-1.3-.4-1.8-.9-1.2-1.2-1.2-3.1 0-4.3L14.5 3z" stroke="currentColor" stroke-width="1.5"/>
@@ -27,8 +27,7 @@ const IconLotus = `
   <path d="M4 12c2.7.5 4.8 1.5 6 3-2.5 1.2-4.7 1.2-6 0-1.3-1.2-1.3-1.8 0-3zM20 12c-2.7.5-4.8 1.5-6 3 2.5 1.2 4.7 1.2 6 0 1.3-1.2 1.3-1.8 0-3z" stroke="currentColor" stroke-width="1.5"/>
 </svg>`;
 
-/** ====== Render landing GlowUp ====== **/
-const app = document.querySelector<HTMLDivElement>('#app')!
+const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
   <div class="app">
     <nav class="navbar">
@@ -38,6 +37,7 @@ app.innerHTML = `
       </div>
       <div class="nav-actions">
         <button id="installBtn" class="install-btn" title="Instalar app" disabled>Instalar</button>
+        <button id="pushBtn" class="ghost-btn" title="Activar notificaciones">🔔 Notificaciones</button>
       </div>
     </nav>
 
@@ -84,7 +84,98 @@ app.innerHTML = `
   </div>
 `;
 
-/** ====== Tip del día ====== **/
+function mountNetworkBanner() {
+  const banner = document.createElement('div');
+  banner.id = 'net-banner';
+  banner.className = 'net-banner';
+  banner.textContent = 'Estás sin conexión';
+  document.body.appendChild(banner);
+
+  const set = () => {
+    if (navigator.onLine) banner.classList.remove('show');
+    else banner.classList.add('show');
+  };
+  window.addEventListener('online', set);
+  window.addEventListener('offline', set);
+  set();
+}
+
+function mountOfflineForm() {
+  const container = document.querySelector('.app')!;
+
+  const section = document.createElement('section');
+  section.className = 'hero form-section';
+  section.innerHTML = `
+    <h2 class="form-title">Tus notas GlowUp (offline)</h2>
+    <p class="muted">Guarda ideas o actividades. Si no hay red, se guardan localmente y se sincronizan luego.</p>
+
+    <form id="offlineForm" class="offline-form">
+      <textarea id="entryText" rows="3" placeholder="Escribe tu nota..."></textarea>
+      <div class="form-actions">
+        <button class="primary" type="submit">Guardar</button>
+        <span class="hint">(Funciona sin conexión)</span>
+      </div>
+    </form>
+
+    <div class="entries-wrap">
+      <h3 class="entries-title">Registros</h3>
+      <ul id="entriesList" class="entries-list"></ul>
+    </div>
+  `;
+  const footer = container.querySelector('.footer');
+  container.insertBefore(section, footer || null);
+
+  const form = section.querySelector<HTMLFormElement>('#offlineForm')!;
+  const textarea = section.querySelector<HTMLTextAreaElement>('#entryText')!;
+  const list = section.querySelector<HTMLUListElement>('#entriesList')!;
+
+  const renderList = async () => {
+    const items = await getAllEntries();
+    list.innerHTML = items.map((it: any) => `
+      <li class="entry">
+        <div class="entry-head">
+          <div class="entry-date">${new Date(it.createdAt).toLocaleString()}</div>
+          <span class="badge ${it.synced ? 'ok' : 'pending'}">${it.synced ? 'Sincronizado' : 'Pendiente'}</span>
+        </div>
+        <div class="entry-text">${(it.text || '').replace(/</g,'&lt;')}</div>
+      </li>
+    `).join('');
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = textarea.value.trim();
+    if (!text) return;
+
+    await addEntry({ text, synced: navigator.onLine });
+    textarea.value = '';
+    await renderList();
+
+    if (!navigator.onLine && 'serviceWorker' in navigator && 'SyncManager' in window) {
+      const reg = await navigator.serviceWorker.ready;
+      await reg.sync?.register('sync-entries');
+      console.log('[BG Sync] registrado: sync-entries');
+    }
+  });
+
+  navigator.serviceWorker.addEventListener('message', (event: MessageEvent) => {
+    if ((event.data as any)?.type === 'SYNC_DONE') {
+      renderList();
+    }
+  });
+
+  window.addEventListener('online', async () => {
+    const reg = await navigator.serviceWorker.ready;
+    await reg.sync?.register('sync-entries');
+    renderList();
+  });
+
+  renderList();
+}
+
+mountNetworkBanner();
+mountOfflineForm();
+
 const tips = [
   'Mezcla tu hidratante con unas gotas de iluminador líquido para un efecto “glow” sutil.',
   'Exfolia suave 1–2 veces por semana; evita hacerlo el mismo día que uses retinoides.',
@@ -124,7 +215,6 @@ window.addEventListener('beforeinstallprompt', (e: Event) => {
   deferredPrompt = e as BeforeInstallPromptEvent;
   if (installBtn) installBtn.disabled = false;
 });
-
 installBtn?.addEventListener('click', async () => {
   if (!deferredPrompt) return;
   installBtn.disabled = true;
@@ -140,3 +230,45 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error('SW error', err));
   });
 }
+
+async function setupPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    alert('Tu navegador no soporta Push API.');
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') {
+    alert('No se concedió permiso para notificaciones.');
+    return;
+  }
+
+  const reg = await navigator.serviceWorker.ready;
+
+  const VAPID_PUBLIC_KEY = 'BL9pUDt94-xK-YXD_ygpRz0Gk97bQ6pXbygS_VwuW_9IOf-MTrAT2Y7eSfoFjaUvFGI-Ng-WpuwcErUOT_brhJE';
+
+  const toUint8 = (base64: string) => {
+    const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+    const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(b64);
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i);
+    return out;
+  };
+
+  const subscription = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: toUint8(VAPID_PUBLIC_KEY),
+  });
+
+  console.log('[Push] Suscripción creada:', subscription);
+
+  await fetch('http://localhost:5000/api/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(subscription),
+  });
+
+  alert('✨ Notificaciones activadas correctamente');
+}
+
+document.getElementById('pushBtn')?.addEventListener('click', setupPush);
