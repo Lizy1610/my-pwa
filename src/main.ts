@@ -262,7 +262,7 @@ async function setupPush() {
 
   console.log('[Push] Suscripción creada:', subscription);
 
-  await fetch('my-pwa-production-e81a.up.railway.app/api/subscribe', {
+  await fetch('https://my-pwa-production-e81a.up.railway.app/api/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(subscription),
