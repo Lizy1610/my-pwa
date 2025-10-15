@@ -1,4 +1,4 @@
-const VERSION = 'v11';
+const VERSION = 'v12';
 const STATIC_CACHE = `glowup-static-${VERSION}`;
 const DYNAMIC_CACHE = `glowup-dynamic-${VERSION}`;
 
@@ -9,35 +9,45 @@ const BACKEND_URL =
 
 const APP_SHELL = [
   '/',
-  '/index.html',
-  '/style.css',
   '/manifest.json',
   '/logo-glowup.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-  '/offline.html',
+  '/offline.html'
 ];
+
+async function precacheTolerant(list) {
+  const cache = await caches.open(STATIC_CACHE);
+  await Promise.all(
+    list.map(async (url) => {
+      try {
+        const resp = await fetch(url, { cache: 'no-store' });
+        if (resp.ok) await cache.put(url, resp.clone());
+        else console.warn('[SW] precache skip (not ok):', url, resp.status);
+      } catch (e) {
+        console.warn('[SW] precache skip (fetch error):', url, e);
+      }
+    })
+  );
+}
 
 self.addEventListener('install', (event) => {
   console.log('[SW] Install', VERSION);
-  event.waitUntil(
-    caches.open(STATIC_CACHE).then((c) => c.addAll(APP_SHELL))
-  );
+  event.waitUntil(precacheTolerant(APP_SHELL));
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activate', VERSION);
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => ![STATIC_CACHE, DYNAMIC_CACHE].includes(k))
-          .map((k) => caches.delete(k))
-      )
-    )
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys
+        .filter(k => ![STATIC_CACHE, DYNAMIC_CACHE].includes(k))
+        .map(k => caches.delete(k))
+    );
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
@@ -50,7 +60,6 @@ self.addEventListener('fetch', (event) => {
   }
 
   const sameOrigin = new URL(req.url).origin === self.location.origin;
-
   if (sameOrigin) {
     if (req.destination === 'script' || req.destination === 'style') {
       event.respondWith(staleWhileRevalidate(req));
@@ -173,14 +182,10 @@ async function syncPendingEntries() {
       const resp = await fetch(`${BACKEND_URL}/api/entries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entries: [ { id: item.id, text: item.text, createdAt: item.createdAt } ] }),
+        body: JSON.stringify({ entries: [{ id: item.id, text: item.text, createdAt: item.createdAt }] })
       });
-      if (resp.ok) {
-        okIds.push(item.id);
-      }
-    } catch (err) {
-
-    }
+      if (resp.ok) okIds.push(item.id);
+    } catch (_) {  }
   }
 
   if (okIds.length) {

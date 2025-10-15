@@ -159,9 +159,7 @@ function mountOfflineForm() {
   });
 
   navigator.serviceWorker.addEventListener('message', (event: MessageEvent) => {
-    if ((event.data as any)?.type === 'SYNC_DONE') {
-      renderList();
-    }
+    if ((event.data as any)?.type === 'SYNC_DONE') renderList();
   });
 
   window.addEventListener('online', async () => {
@@ -270,5 +268,4 @@ async function setupPush() {
 
   alert('✨ Notificaciones activadas correctamente');
 }
-
 document.getElementById('pushBtn')?.addEventListener('click', setupPush);
