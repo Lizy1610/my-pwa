@@ -5,7 +5,7 @@ const DYNAMIC_CACHE = `glowup-dynamic-${VERSION}`;
 const BACKEND_URL =
   self.location.hostname === 'localhost'
     ? 'http://localhost:5000'
-    : 'https://TU-BACKEND-PROD.DOMINIO';
+    : 'my-pwa-production-e81a.up.railway.app';
 
 const APP_SHELL = [
   '/',
