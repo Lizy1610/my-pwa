@@ -1,24 +1,64 @@
-# Logs
-logs
-*.log
+# ============================
+#   GlowUp Backend GitIgnore
+# ============================
+
+# --- Dependencias ---
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
+package-lock.json
 
-node_modules
-dist
-dist-ssr
-*.local
+# --- Archivos de entorno ---
+.env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# --- Compilaciones / Builds ---
+dist/
+build/
+out/
+.cache/
+.tmp/
+coverage/
+
+# --- Archivos del sistema ---
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
+*.swp
+*.swo
+
+# --- Logs ---
+logs/
+*.log
+*.log.*
+backend.log
+debug.log
+
+# --- Archivos temporales ---
+*.tmp
+*.temp
+*.bak
+*.old
+
+# --- Archivos de almacenamiento local ---
+storage/entries.json
+storage/subscriptions.json
+
+# --- Configuración de IDE ---
+.vscode/
+.idea/
+*.iml
+
+# --- Backups y archivos de exportación ---
+*.zip
+*.tar
+*.gz
+
+# --- Otros ---
+# Ignorar archivos que no deben versionarse
+*.pid
+*.seed

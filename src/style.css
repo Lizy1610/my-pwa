@@ -94,7 +94,6 @@ body {
   display: none !important;
 }
 
-/* ===== App / Landing ===== */
 .app {
   max-width: 1100px;
   margin: 0 auto;
@@ -177,7 +176,6 @@ body {
   background: transparent;
 }
 
-/* Grid de tips */
 .grid {
   margin-top: 26px;
   display: grid;
@@ -220,7 +218,6 @@ body {
   }
 }
 
-/* Iconos SVG */
 .icon {
   width: 24px;
   height: 24px;
@@ -234,7 +231,6 @@ body {
   margin-right: 8px;
 }
 
-/* Footer */
 .footer {
   display: flex;
   align-items: center;
@@ -253,3 +249,49 @@ body {
 .link:hover {
   text-decoration: underline;
 }
+
+.net-banner{
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: 14px; padding: 8px 12px; border-radius: 10px;
+  font: 600 13px 'Poppins', system-ui;
+  background: #ef4444; color: #fff; z-index: 9998;
+  box-shadow: 0 8px 16px rgba(0,0,0,.2);
+  display: none;
+}
+.net-banner.show{ display: block; }
+
+.form-section{ margin-top: 22px; }
+.form-title{ margin: 0 0 6px; }
+.muted{ color: var(--muted); }
+
+.offline-form{
+  margin-top: 12px; display: grid; gap: 10px;
+}
+.offline-form textarea{
+  padding: 12px; border-radius: 12px;
+  border: 1px solid rgba(219,39,119,.25);
+  font: 14px 'Poppins', system-ui; resize: vertical;
+  background: #fff; color: var(--text);
+}
+.offline-form .form-actions{
+  display: flex; align-items: center; gap: 12px;
+}
+.offline-form .hint{ color: var(--muted); font-size: 12px }
+
+.entries-wrap{ margin-top: 16px }
+.entries-title{ margin: 0 0 6px }
+.entries-list{ list-style: none; padding: 0; margin: 0; display: grid; gap: 10px }
+.entry{
+  padding: 12px; border: 1px solid rgba(219,39,119,.18);
+  border-radius: 12px; background: #fff;
+}
+.entry-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px }
+.entry-date{ font-weight: 600; }
+.entry-text{ color: var(--muted); }
+
+.badge{
+  display: inline-block; padding: 4px 8px; border-radius: 999px;
+  font-size: 12px; font-weight: 700;
+}
+.badge.ok{ background: rgba(22,163,74,.12); color: #16a34a; border: 1px solid rgba(22,163,74,.25) }
+.badge.pending{ background: rgba(245,158,11,.12); color: #f59e0b; border: 1px solid rgba(245,158,11,.25) }
