@@ -5,7 +5,7 @@ export const STORE = 'entries';
 export const BACKEND_URL =
   location.hostname === 'localhost'
     ? 'http://localhost:5000'
-    : 'https://TU-BACKEND-PROD.DOMINIO';
+    : 'my-pwa-production-e81a.up.railway.app';
 
 export interface Entry {
   id: number;
